@@ -46,10 +46,100 @@
                         <button disabled="true" class="btn btn-primary btn-lg"
                             v-else
                             >장바구니 담기</button>
+                        <span class="inventory-message"
+                        v-if="product.availableInventory - cartItemCount === 0">
+                            품절!
+                        </span>
+                        <span class="inventory-message"
+                        v-else-if="product.availableInventory - cartItemCount < 5">
+                            {{product.availableInventory - cartItemCount}} 남았습니다!
+                        </span>
+                        <span class="inventory-message"
+                        v-else>
+                            지금 구매하세요!
+                        </span>
+                        <div class="rating">
+                            <span v-bind:class="{'rating-active': checkRating(n)}" v-for="n in 5">☆</span>
+                        </div>
                     </div>
                 </div>
                 <div v-else>
-                    체크아웃 페이지
+                    <div class="col-md-6">
+                        <strong>이름: </strong>
+                        <input v-model.lazy.trim="order.firstName" class="form-control" />
+                    </div>
+                    <div class="col-md-6">
+                        <strong>성: </strong>
+                        <input v-model.lazy.trim="order.lastName" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12"><stong>주소:</stong></div>
+                        <div class="col-md-12">
+                            <input v-model.lazy.trim="order.address" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12"><stong>도시:</stong></div>
+                        <div class="col-md-12">
+                            <input v-model.lazy.trim="order.city" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <stong>주:</stong>
+                            <select v-model="order.state" class="form-control" >
+                                <option disabled value="">주</option>
+                                <option v-for.trim="(state,key) in states" v-bind:value="state">{{state}}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-12"><stong>우편번호:</stong>
+                            <input v-model.number.trim="order.zip" type="number" class="form-control"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-6 boxes">
+                            <input type="checkbox"
+                                id="gift"
+                                value="true"
+                                v-bind:true-value="order.sendGift"
+                                v-bind:false-value="order.dontSendGift"
+                                v-model="order.gift">
+                            <label for="gift">선물로 보내기?</label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-6 boxes">
+                            <input type="radio"
+                                id="home"
+                                v-bind:value="order.home"
+                                v-model="order.method">
+                            <label for="home">자택</label>
+                            <input type="radio"
+                                id="business"
+                                v-bind:value="order.business"
+                                v-model="order.method">
+                            <label for="business">직장</label>
+                        </div>
+                    </div>
+                    <div class="col-md-12 verify">
+                        <pre>
+                            이름: {{order.firstName}}
+                            성: {{order.lastName}}
+                            주소: {{order.address}}
+                            도시: {{order.city}}
+                            우편번호: {{order.zip}}
+                            주: {{order.state}}
+                            주소지: {{order.method}}
+                            선물: {{order.gift}}
+                        </pre>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary submit" v-on:click="submitForm">주문하기</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -62,6 +152,27 @@
             el: "#app",
             data: {
                 showProduct: true,
+                states: [
+                        '알리바마',
+                        '애리조나',
+                        '캘리포니아',
+                        '네바다',
+                    ],
+                order: {
+                    firstName: '',
+                    lastName: '',
+                    address: '',
+                    city: '',
+                   
+                    state: '',
+                    zip: '',
+                    gift: '선물로 보내기',
+                    method: '자택 주소',
+                    business: '직장 주소',
+                    home: '자택 주소',
+                    sendGift: '선물로 보내기',
+                    dontSendGift: '선물로 보내지 않기',
+                },
                 sitename: "Vue.js 애완용품샵",
                 product: {
                     id: 1001,
@@ -70,7 +181,8 @@
                                 "유기농 25파운드 사료입니다.",
                     price: 2000,
                     image: "assets/images/product-fullsize.png",
-                    availableInventory: 5
+                    availableInventory: 10,
+                    rating: 1,
                 },
                 cart: [],
             },
@@ -99,6 +211,12 @@
                 },
                 showCheckout() {
                     this.showProduct = this.showProduct ? false: true;
+                },
+                submitForm(){
+                    alert('제출 완료');
+                },
+                checkRating(n) {
+                    return this.product.rating - n >=0;
                 },
             },
             computed: {
