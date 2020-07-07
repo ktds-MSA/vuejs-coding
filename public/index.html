@@ -1,17 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <link rel="icon" href="<%= BASE_URL %>favicon.ico">
-    <title><%= htmlWebpackPlugin.options.title %></title>
+    <script src="https://unpkg.com/vue"></script>
   </head>
   <body>
-    <noscript>
-      <strong>We're sorry but <%= htmlWebpackPlugin.options.title %> doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
-    </noscript>
-    <div id="app"></div>
+    <div id="app">
+      <my-component></my-component>
+    </div>
+    <script>
+      Vue.component('my-component',{
+        template: '<div>안녕, 전역 컴포넌트로부터</div>'
+      });
+
+      new Vue({
+        el: "#app"
+      });
+      const Component = {
+        template: '<div>안녕, 지역 컴포넌트로부터</div>'
+      }
+
+      new Vue({
+        el: '#app',
+        components: {'myComponent': Component}
+      });
+    </script>
     <!-- built files will be auto injected -->
   </body>
 </html>

@@ -3,6 +3,7 @@
     <title>Vue.js 애완용품샵</title>
     <meta charset="UTF-8">
     <script src="https://unpkg.com/vue"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.16.2/axios.js"></script>
     <link rel="stylesheet" type="text/css" href="assets/css/app.css"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 </head>
@@ -24,42 +25,45 @@
                     </div>
                 </div> 
             </header>
-            <div class="row product">
                 <div v-if="showProduct">
-                    <div class="col-md-2 col-md-offset-1">
-                        <figure>
-                            <img v-bind:src="product.image">
-                        </figure>
-                    </div>
-                    <div class="col-md-6 col-md-offset-2 description">
-                        <h1>{{product.title}}</h1>
-                        <p v-html="product.description"></p>
-                        <p class="price">
-                            {{product.price | formatPrice}}
-                        </p>
-                        <button class="btn btn-primary btn-lg" 
-                            v-on:click="addToCart" 
-                            v-if="canAddToCart"
-                            >장바구니 담기
-                        </button>
+                    <div v-for="product in sortedProducts">
+                        <div class="row">
+                            <div class="col-md-5 col-md-offset-0">
+                                <figure>
+                                    <img class="product" v-bind:src="product.image">
+                                </figure>
+                            </div>
+                            <div class="col-md-6 col-md-offset-0 description">
+                                <h1>{{product.title}}</h1>
+                                <p v-html="product.description"></p>
+                                <p class="price">
+                                    {{product.price | formatPrice}}
+                                </p>
+                                <button class="btn btn-primary btn-lg" 
+                                    v-on:click="addToCart(product)" 
+                                    v-if="canAddToCart(product)"
+                                    >장바구니 담기
+                                </button>
 
-                        <button disabled="true" class="btn btn-primary btn-lg"
-                            v-else
-                            >장바구니 담기</button>
-                        <span class="inventory-message"
-                        v-if="product.availableInventory - cartItemCount === 0">
-                            품절!
-                        </span>
-                        <span class="inventory-message"
-                        v-else-if="product.availableInventory - cartItemCount < 5">
-                            {{product.availableInventory - cartItemCount}} 남았습니다!
-                        </span>
-                        <span class="inventory-message"
-                        v-else>
-                            지금 구매하세요!
-                        </span>
-                        <div class="rating">
-                            <span v-bind:class="{'rating-active': checkRating(n)}" v-for="n in 5">☆</span>
+                                <button disabled="true" class="btn btn-primary btn-lg"
+                                    v-else
+                                    >장바구니 담기</button>
+                                <span class="inventory-message"
+                                v-if="product.availableInventory - cartCount(product.id) === 0">
+                                    품절!
+                                </span>
+                                <span class="inventory-message"
+                                v-else-if="product.availableInventory - cartCount(product.id) < 5">
+                                    {{product.availableInventory - cartCount(product.id)}} 남았습니다!
+                                </span>
+                                <span class="inventory-message"
+                                v-else>
+                                    지금 구매하세요!
+                                </span>
+                                <div class="rating">
+                                    <span v-bind:class="{'rating-active': checkRating(n,product)}" v-for="n in 5">☆</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -174,16 +178,7 @@
                     dontSendGift: '선물로 보내지 않기',
                 },
                 sitename: "Vue.js 애완용품샵",
-                product: {
-                    id: 1001,
-                    title: "고양이 사료, 25파운드",
-                    description: "당신의 고양이를 위한 <em>거부할 수 없는</em>," +
-                                "유기농 25파운드 사료입니다.",
-                    price: 2000,
-                    image: "assets/images/product-fullsize.png",
-                    availableInventory: 10,
-                    rating: 1,
-                },
+                products: [],
                 cart: [],
             },
             filters: {
@@ -206,8 +201,8 @@
                 }
             },
             methods: {
-                addToCart: function() {
-                    this.cart.push(this.product.id);
+                addToCart: function(myProduct) {
+                    this.cart.push(myProduct.id);
                 },
                 showCheckout() {
                     this.showProduct = this.showProduct ? false: true;
@@ -215,17 +210,40 @@
                 submitForm(){
                     alert('제출 완료');
                 },
-                checkRating(n) {
-                    return this.product.rating - n >=0;
+                checkRating(n, myProduct) {
+                    return myProduct.rating - n >=0;
+                },
+                cartCount(id) {
+                    let count=0;
+                    for (var i=0; i< this.cart.length; i++){
+                        if(this.cart[i] === id) {
+                            count++;
+                        }
+                    }
+                    return count;
+                },
+                canAddToCart: function (myProduct) {
+                    return myProduct.availableInventory > this.cartCount(myProduct.id);
                 },
             },
             computed: {
                 cartItemCount: function() {
                     return this.cart.length || '';
                 },
-                canAddToCart: function () {
-                    return this.product.availableInventory > this.cartItemCount;
+                sortedProducts() {
+                    if(this.products.length > 0 ) {
+                        let productsArray = this.products.slice(0);
+                        function compare(a, b) {
+                            if(a.title.toLowerCase() < b.title.toLowerCase())
+                                return -1;
+                            if(a.title.toLowerCase() > b.title.toLowerCase())
+                                return 1;
+                            return 0;
+                        }
+                        return productsArray.sort(compare);
+                    }
                 }
+                
             },
             beforeCrete: function() {
                 if(APP_LOG_LIFECYCLE_EVENTS) {
@@ -233,6 +251,12 @@
                 }
             },
             created: function(){
+                axios.get('./products.json')
+                    .then((response) => {
+                        this.products=response.data.products;
+                        console.log(this.products);
+                    });
+
                 if (APP_LOG_LIFECYCLE_EVENTS){
                     console.log("created");
                 }
